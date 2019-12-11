@@ -428,55 +428,6 @@ static struct miscdevice mastermind_ctl_device = {
 	.mode = 0666,
 };
 
-/**
- * mastermind_init() - entry point into the Mastermind kernel module
- * Return: 0 on successful initialization, negative on error
- */
-
-
-/**
- * mm_num_pegs() - calculate number of black pegs and number of white pegs
- * @target: target code, up to NUM_PEGS elements
- * @guess: user's guess, up to NUM_PEGS elements
- * @num_black: *OUT* parameter, to store calculated number of black pegs
- * @num_white: *OUT* parameter, to store calculated number of white pegs
- *
- * You do not need to modify this function.
- *
- */
-static void mm_num_pegs(int target[], int guess[], unsigned *num_black,
-			unsigned *num_white)
-{
-	size_t i;
-	size_t j;
-	bool peg_black[NUM_PEGS];
-	bool peg_used[NUM_PEGS];
-
-	*num_black = 0;
-	for (i = 0; i < NUM_PEGS; i++) {
-		if (guess[i] == target[i]) {
-			(*num_black)++;
-			peg_black[i] = true;
-			peg_used[i] = true;
-		} else {
-			peg_black[i] = false;
-			peg_used[i] = false;
-		}
-	}
-
-	*num_white = 0;
-	for (i = 0; i < NUM_PEGS; i++) {
-		if (peg_black[i])
-			continue;
-		for (j = 0; j < NUM_PEGS; j++) {
-			if (guess[i] == target[j] && !peg_used[j]) {
-				peg_used[j] = true;
-				(*num_white)++;
-				break;
-			}
-		}
-	}
-}
 
 /* Copy mm_read(), mm_write(), mm_mmap(), and mm_ctl_write(), along
  * with all of your global variables and helper functions here.
