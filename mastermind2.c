@@ -582,7 +582,7 @@ static irqreturn_t cs421net_top(int irq, void *cookie)
 static irqreturn_t cs421net_bottom(int irq, void *cookie)
 {
 	printk("Inside the bottom function.");
-	bool valid_datal;
+	bool valid_data;
 	size_t i;
 	struct list_head *pos;
 	struct mm_game *temp;
