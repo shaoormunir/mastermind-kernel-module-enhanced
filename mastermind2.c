@@ -566,9 +566,10 @@ static irqreturn_t cs421net_bottom(int irq, void *cookie)
 	size_t i;
 	struct list_head *pos, *n;
 	struct mm_game *temp;
+	size_t returned_data_size;
 	/* Part 4: YOUR CODE HERE */
-	char * data = cs421net_get_data(4);
-	if (data == NULL){
+	char * data = cs421net_get_data(&returned_data_size);
+	if (returned_data_size == 0){
 		printk("Nothing was returned.");
 	}
 	for ( i = 0; i < 4; i++)
