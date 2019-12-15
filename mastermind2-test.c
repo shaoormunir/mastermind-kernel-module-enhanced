@@ -1,6 +1,8 @@
 #include "cs421net.h"
 
 /* YOUR CODE HERE */
+#include <errno.h>
+#include <linux/capability.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -10,6 +12,8 @@
 #include <sys/user.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
 
 #define TEST_PART_1
 
@@ -21,8 +25,21 @@
 
 #define TEST_PART_5
 
+#define TEST_PART_6
+
+#define TEST_PART_7
+
+#define TEST_PART_8
+
 static unsigned test_passed;
 static unsigned test_failed;
+static bool caught_fault;
+static bool expecting_fault;
+
+struct thread_arg {
+	pthread_t pth;
+	char names[1];
+};
 
 static size_t USER_VIEW_LINE_SIZE = 22;
 
@@ -58,6 +75,22 @@ static size_t USER_VIEW_LINE_SIZE = 22;
 		fflush(stdout);                     \
 	} while (0);
 
+#define CHECK_IS_NOT_EQUAL(valA, valB)      \
+	do                                      \
+	{                                       \
+		if ((valA) != (valB))               \
+		{                                   \
+			test_passed++;                  \
+			printf("%d: PASS\n", __LINE__); \
+		}                                   \
+		else                                \
+		{                                   \
+			test_failed++;                  \
+			printf("%d: FAIL\n", __LINE__); \
+		}                                   \
+		fflush(stdout);                     \
+	} while (0);
+
 #define CHECK_IS_STRING_EQUAL(valA, valB, size) \
 	do                                          \
 	{                                           \
@@ -80,6 +113,13 @@ static size_t USER_VIEW_LINE_SIZE = 22;
 		}                                       \
 	} while (0);
 
+static void fault_handler(int signum, siginfo_t *siginfo __attribute__((unused)), void *context __attribute__((unused))) {
+	printf("Caught signal %d: %s!\n", signum, strsignal(signum));
+	if (!expecting_fault) {
+		exit(EXIT_FAILURE);
+	}
+	caught_fault = true;
+}
 /**
  * open_mapping() - opens a mapping to the given device name in either read or write mode, depending
  * on the value of the read boolean
@@ -155,9 +195,6 @@ void report_test_results(void)
 }
 
 int main(void) {
-	/* Here is an example of sending some data to CS421Net */
-	cs421net_init();
-	cs421net_send("4442", 4);
 
 	/* YOUR CODE HERE */
 		/** Test part 1 checks the output of the game if the game is not active */
@@ -180,18 +217,11 @@ int main(void) {
 	write_to_device("/dev/mm", "4221", 4);
 	read_from_device("/dev/mm", last_result, 4);
 	CHECK_IS_STRING_EQUAL(last_result, "B3W0", 4);
-	write_to_device("/dev/mm", "4211", 4);
-	printf("Printing user view\n");
-	char *user_view = (char *)open_mapping("/dev/mm", true);
-	print_user_view(user_view);
-	close_mapping((void *)user_view);
-	read_from_device("/dev/mm", last_result, 4);
-	CHECK_IS_STRING_EQUAL(last_result, "B4W0", 4);
 	write_to_device("/dev/mm", "1142", 4);
 	read_from_device("/dev/mm", last_result, 4);
-	CHECK_IS_STRING_EQUAL(last_result, "B0W4", 4);
+	CHECK_IS_STRING_EQUAL(last_result, "B0W4", 4)
 	printf("Printing user view\n");
-	user_view = (char *)open_mapping("/dev/mm", true);
+	char * user_view = (char *)open_mapping("/dev/mm", true);
 	print_user_view(user_view);
 	close_mapping((void *)user_view);
 #endif
@@ -204,12 +234,58 @@ int main(void) {
 	result = read_from_device("/dev/mm", last_result, 54);
 	CHECK_IS_EQUAL(result, 4);
 #endif
-	/** part 5 quits the game and checks the output for the inactive game */
+
+/** part 5 checks if the game finishes sucessfully after correct input */
 #ifdef TEST_PART_5
+	printf("Writing the correct guess to end the game.");
+	write_to_device("/dev/mm", "4211", 4);
+	read_from_device("/dev/mm", last_result, 4);
+	CHECK_IS_STRING_EQUAL(last_result, "B4W0", 4);
+	errno = 0;
+	write_to_device("/dev/mm", "4222", 4);
+	CHECK_IS_EQUAL(errno, -EINVAL);
+	printf("Printing user view\n");
+	char * user_view = (char *)open_mapping("/dev/mm", true);
+	print_user_view(user_view);
+	close_mapping((void *)user_view);
+#endif
+	/** part 6 starts the game and then quits the game and checks the output for the inactive game */
+#ifdef TEST_PART_6
 	printf("Quitting the game and checking output\n");
+	write_to_device("/dev/mm_ctl", "start", 5);
 	write_to_device("/dev/mm_ctl", "quit", 4);
 	read_from_device("/dev/mm", last_result, 4);
 	CHECK_IS_STRING_EQUAL(last_result, "????", 4);
+#endif
+	/** part 7 starts the game and then quits the game and checks the output for the inactive game */
+#ifdef TEST_PART_7
+	cs421net_init();
+	printf("Checking the network capabilities of the game\n");
+	cs421net_send("4442", 4);
+	write_to_device("/dev/mm_ctl", "start", 5);
+	write_to_device("/dev/mm_ctl", "1111", 4);
+	read_from_device("/dev/mm", last_result, 4);
+	CHECK_IS_STRING_EQUAL(last_result, "B0W0", 4);
+	cs421net_send("1111", 4);
+	write_to_device("/dev/mm_ctl", "1111", 4);
+	read_from_device("/dev/mm", last_result, 4);
+	CHECK_IS_STRING_EQUAL(last_result, "B4W0", 4);
+#endif
+/** part 8 will check for permission while trying to change colors */
+#ifdef TEST_PART_8
+	if (!capable(CAP_SYS_ADMIN)){
+		errno = 0;
+		write_to_device("/dev/mm_ctl", "colors 8", 5);
+		CHECK_IS_EQUAL(errno, -EACCES);
+	}
+	else{
+		errno = 0;
+		write_to_device("/dev/mm_ctl", "colors 1", 5);
+		CHECK_IS_EQUAL(errno, -EINVAL);
+		errno = 0;
+		write_to_device("/dev/mm_ctl", "colors 8", 5);
+		CHECK_IS_NOT_EQUAL(errno, -EINVAL);
+	}
 #endif
 	report_test_results();
 	return 0;
