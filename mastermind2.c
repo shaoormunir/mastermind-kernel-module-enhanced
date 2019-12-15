@@ -569,16 +569,13 @@ static irqreturn_t cs421net_bottom(int irq, void *cookie)
 	size_t returned_data_size;
 	/* Part 4: YOUR CODE HERE */
 	char * data = cs421net_get_data(&returned_data_size);
-	if (returned_data_size == 0){
-		printk("Nothing was returned.");
-	}
-	for ( i = 0; i < 4; i++)
+	valid_data = returned_data_size == 4;
+	for ( i = 0; i < 4 && valid_data; i++)
 	{
 		if(data[i] < 48 || data[i] > 57){
 			valid_data = false;
 		}
 	}
-	valid_data = returned_data_size == 4;
 	if(valid_data){
 		printk("Data is valid.");
 		printk("Data is: %c%c%c%c", data[0], data[1], data[2], data[3]);
