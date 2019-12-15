@@ -249,13 +249,13 @@ int main(void) {
 #ifdef TEST_PART_7
 	cs421net_init();
 	printf("Checking the network capabilities of the game\n");
-	cs421net_send("4442", 4);
 	write_to_device("/dev/mm_ctl", "start", 5);
-	write_to_device("/dev/mm_ctl", "1111", 4);
+	cs421net_send("4442", 4);
+	write_to_device("/dev/mm", "1111", 4);
 	read_from_device("/dev/mm", last_result, 4);
 	CHECK_IS_STRING_EQUAL(last_result, "B0W0", 4);
 	cs421net_send("1111", 4);
-	write_to_device("/dev/mm_ctl", "1111", 4);
+	write_to_device("/dev/mm", "1111", 4);
 	read_from_device("/dev/mm", last_result, 4);
 	CHECK_IS_STRING_EQUAL(last_result, "B4W0", 4);
 	read_from_device("/sys/devices/platform/mastermind/stats", stats, PAGE_SIZE);
