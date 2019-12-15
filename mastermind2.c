@@ -521,7 +521,6 @@ static irqreturn_t cs421net_top(int irq, void *cookie)
 {
 	/* Part 4: YOUR CODE HERE */
 	if(irq == CS421NET_IRQ){
-		cs421net_bottom(irq,cookie);
 		return IRQ_WAKE_THREAD;
 	}else
 	{
@@ -564,7 +563,7 @@ static irqreturn_t cs421net_bottom(int irq, void *cookie)
 	struct list_head *pos, *n;
 	struct mm_game *temp;
 	/* Part 4: YOUR CODE HERE */
-	char * data = cs421net_get_data();
+	char * data = cs421net_get_data(4);
 	for ( i = 0; i < 4; i++)
 	{
 		if(data[i] <48 && data[i] > 57){
