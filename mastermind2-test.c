@@ -257,7 +257,7 @@ int main(void) {
 	cs421net_send("1111", 4);
 	write_to_device("/dev/mm", "1111", 4);
 	read_from_device("/dev/mm", last_result, 4);
-	CHECK_IS_STRING_EQUAL(last_result, "B4W0", 4);
+	CHECK_IS_STRING_EQUAL(last_result, "????", 4);
 	read_from_device("/sys/devices/platform/mastermind/stats", stats, PAGE_SIZE);
 	print_stats(stats);
 #endif
@@ -266,6 +266,7 @@ int main(void) {
 	if (getuid() == geteuid()){
 		errno = 0;
 		write_to_device("/dev/mm_ctl", "colors 8", 5);
+		print("The value of errno is: %d", errno);
 		CHECK_IS_EQUAL(errno, EACCES);
 		read_from_device("/sys/devices/platform/mastermind/stats", stats, PAGE_SIZE);
 		print_stats(stats);
