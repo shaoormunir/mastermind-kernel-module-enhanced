@@ -604,8 +604,8 @@ static irqreturn_t cs421net_bottom(int irq, void *cookie)
 		printk("Data is: %c%c%c%c", data[0], data[1], data[2], data[3]);
 		for (pos = game_list.next; pos != &game_list; pos = pos->next)
 		{
+			temp = list_entry(pos, struct mm_game, list);
 			printk("Changing target for process with id: %d", temp->uid.val);
-			 temp = list_entry(pos, struct mm_game, list);
 			 for ( i = 0; i < 4; i++)
 			 {
 				 temp->target_code[i] = data[i];
