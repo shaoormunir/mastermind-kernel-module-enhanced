@@ -2,7 +2,6 @@
 
 /* YOUR CODE HERE */
 #include <errno.h>
-#include <linux/capability.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -273,7 +272,7 @@ int main(void) {
 #endif
 /** part 8 will check for permission while trying to change colors */
 #ifdef TEST_PART_8
-	if (!capable(CAP_SYS_ADMIN)){
+	if (getuid() == geteuid()){
 		errno = 0;
 		write_to_device("/dev/mm_ctl", "colors 8", 5);
 		CHECK_IS_EQUAL(errno, -EACCES);
