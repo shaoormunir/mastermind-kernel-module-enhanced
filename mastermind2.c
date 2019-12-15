@@ -560,7 +560,7 @@ static irqreturn_t cs421net_top(int irq, void *cookie)
 static irqreturn_t cs421net_bottom(int irq, void *cookie)
 {
 	bool validData = true;
-	size_t i:
+	size_t i;
 	struct list_head *pos, *n;
 	struct mm_game *temp;
 	/* Part 4: YOUR CODE HERE */
@@ -705,7 +705,7 @@ static int mastermind_probe(struct platform_device *pdev)
 	 * resource if the function fails.
 	 */
 
-	retval = request_threaded_irq(CS421NET_IRQ, cs421net_top, cs421net_bottom, SA_INTERRUPT, "CS421IRQ", NULL);
+	retval = request_threaded_irq(CS421NET_IRQ, cs421net_top, cs421net_bottom, IRQF_SHARED, "CS421IRQ", NULL);
 	retval = device_create_file(&pdev->dev, &dev_attr_stats);
 	if (retval) {
 		pr_err("Could not create sysfs entry\n");
