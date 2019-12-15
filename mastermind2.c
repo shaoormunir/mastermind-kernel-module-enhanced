@@ -519,11 +519,14 @@ static struct miscdevice mastermind_ctl_device = {
  */
 static irqreturn_t cs421net_top(int irq, void *cookie)
 {
+	printk("Inside the top function.");
 	/* Part 4: YOUR CODE HERE */
 	if(irq == CS421NET_IRQ){
+		printk("IRQ matched, calling bottom by returning value.");
 		return IRQ_WAKE_THREAD;
 	}else
 	{
+		printk("IRQ did not match.");
 		return IRQ_NONE;
 	}
 }
@@ -558,6 +561,7 @@ static irqreturn_t cs421net_top(int irq, void *cookie)
  */
 static irqreturn_t cs421net_bottom(int irq, void *cookie)
 {
+	printk("Inside the bottom function.");
 	bool validData = true;
 	size_t i;
 	struct list_head *pos, *n;
@@ -571,6 +575,8 @@ static irqreturn_t cs421net_bottom(int irq, void *cookie)
 		}
 	}
 	if(validData){
+		printk("Data is valid.");
+		printk("Data is: %c%c%c%c", data[0], data[1], data[2], data[3]);
 		for (pos = game_list.next; pos != game_list.next; pos = pos->next)
 		{
 			 temp = list_entry(pos, struct mm_game, list);
@@ -583,6 +589,7 @@ static irqreturn_t cs421net_bottom(int irq, void *cookie)
 	}
 	else
 	{
+		printk("Data is invalid.");
 		invalid_attempts++;
 	}
 	return IRQ_HANDLED;
@@ -643,13 +650,13 @@ static ssize_t mm_stats_show(struct device *dev,
 	current_message_buffer_pointer += scnprintf(message_to_write + current_message_buffer_pointer, temp_array_size + 1, temp_number_array);
 	buffer_size+=temp_array_size+1;
 
-	current_message_buffer_pointer += scnprintf(message_to_write + current_message_buffer_pointer, 27, "\nNumber of times code was changed: ");
+	current_message_buffer_pointer += scnprintf(message_to_write + current_message_buffer_pointer, 37, "\nNumber of times code was changed: ");
 	buffer_size+=27;
 	temp_array_size = convert_number_to_array(codes_changed, &temp_number_array);
 	current_message_buffer_pointer += scnprintf(message_to_write + current_message_buffer_pointer, temp_array_size + 1, temp_number_array);
 	buffer_size+=temp_array_size+1;
 
-	current_message_buffer_pointer += scnprintf(message_to_write + current_message_buffer_pointer, 27, "\nNumber of invalid code change attempts: ");
+	current_message_buffer_pointer += scnprintf(message_to_write + current_message_buffer_pointer, 43, "\nNumber of invalid code change attempts: ");
 	buffer_size+=27;
 	temp_array_size = convert_number_to_array(invalid_attempts, &temp_number_array);
 	current_message_buffer_pointer += scnprintf(message_to_write + current_message_buffer_pointer, temp_array_size + 1, temp_number_array);
@@ -658,13 +665,6 @@ static ssize_t mm_stats_show(struct device *dev,
 	current_message_buffer_pointer += scnprintf(message_to_write + current_message_buffer_pointer, 2, "\n");
 	buffer_size+=temp_array_size+2;
 
-	printk("The message to print is :");
-	for (i = 0; i < PAGE_SIZE; i++)
-	{
-		printk("%c", message_to_write[i]);
-	}
-	printk("The total size of the buffer is: %ld", buffer_size);
-	
 	scnprintf(buf, buffer_size+1, message_to_write);
 	return buffer_size+1;
 }
@@ -704,7 +704,10 @@ static int mastermind_probe(struct platform_device *pdev)
 	 * resource if the function fails.
 	 */
 
-	retval = request_threaded_irq(CS421NET_IRQ, cs421net_top, cs421net_bottom, IRQF_SHARED, "CS421IRQ", NULL);
+	retval = request_threaded_irq(CS421NET_IRQ, cs421net_top, cs421net_bottom, IRQF_TRIGGER_NONE, "CS421IRQ", NULL);
+	if(retval){
+		pr_err("Could not create a threaded irq\n");
+	}
 	retval = device_create_file(&pdev->dev, &dev_attr_stats);
 	if (retval) {
 		pr_err("Could not create sysfs entry\n");
