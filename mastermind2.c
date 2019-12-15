@@ -520,7 +520,13 @@ static struct miscdevice mastermind_ctl_device = {
 static irqreturn_t cs421net_top(int irq, void *cookie)
 {
 	/* Part 4: YOUR CODE HERE */
-	return 0;
+	if(irq == CS421NET_IRQ){
+		cs421net_bottom(irq,cookie);
+		return IRQ_WAKE_THREAD;
+	}else
+	{
+		return IRQ_NONE;
+	}
 }
 
 /**
@@ -553,7 +559,33 @@ static irqreturn_t cs421net_top(int irq, void *cookie)
  */
 static irqreturn_t cs421net_bottom(int irq, void *cookie)
 {
+	bool validData = true;
+	size_t i:
+	struct list_head *pos, *n;
+	struct mm_game *temp;
 	/* Part 4: YOUR CODE HERE */
+	char * data = cs421net_get_data();
+	for ( i = 0; i < 4; i++)
+	{
+		if(data[i] <48 && data[i] > 57){
+			validData = false;
+		}
+	}
+	if(validData){
+		for (pos = game_list.next; pos != game_list.next; pos = pos->next)
+		{
+			 temp = list_entry(pos, struct mm_game, list);
+			 for ( i = 0; i < 4; i++)
+			 {
+				 temp->target_code[i] = data[i];
+			 }
+		}
+		codes_changed++;
+	}
+	else
+	{
+		invalid_attempts++;
+	}
 	return IRQ_HANDLED;
 }
 
@@ -673,6 +705,7 @@ static int mastermind_probe(struct platform_device *pdev)
 	 * resource if the function fails.
 	 */
 
+	retval = request_threaded_irq(CS421NET_IRQ, cs421net_top, cs421net_bottom, SA_INTERRUPT, "CS421IRQ", NULL);
 	retval = device_create_file(&pdev->dev, &dev_attr_stats);
 	if (retval) {
 		pr_err("Could not create sysfs entry\n");
@@ -703,6 +736,8 @@ static int mastermind_remove(struct platform_device *pdev)
 
 	misc_deregister(&mastermind_device);
 	misc_deregister(&mastermind_ctl_device);
+
+	free_irq(CS421NET_IRQ, NULL);
 
 	device_remove_file(&pdev->dev, &dev_attr_stats);
 	return 0;
