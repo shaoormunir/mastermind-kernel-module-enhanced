@@ -562,7 +562,7 @@ static irqreturn_t cs421net_top(int irq, void *cookie)
 static irqreturn_t cs421net_bottom(int irq, void *cookie)
 {
 	printk("Inside the bottom function.");
-	bool validData = true;
+	bool valid_data = true;
 	size_t i;
 	struct list_head *pos, *n;
 	struct mm_game *temp;
@@ -574,11 +574,12 @@ static irqreturn_t cs421net_bottom(int irq, void *cookie)
 	}
 	for ( i = 0; i < 4; i++)
 	{
-		if(data[i] <48 && data[i] > 57){
-			validData = false;
+		if(data[i] < 48 || data[i] > 57){
+			valid_data = false;
 		}
 	}
-	if(validData){
+	valid_data = returned_data_size == 4;
+	if(valid_data){
 		printk("Data is valid.");
 		printk("Data is: %c%c%c%c", data[0], data[1], data[2], data[3]);
 		for (pos = game_list.next; pos != &game_list; pos = pos->next)
