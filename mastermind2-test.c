@@ -254,12 +254,6 @@ int main(void) {
 	write_to_device("/dev/mm", "1111", 4);
 	read_from_device("/dev/mm", last_result, 4);
 	CHECK_IS_STRING_EQUAL(last_result, "B0W0", 4);
-	cs421net_init();
-	cs421net_send("1111", 4);
-	write_to_device("/dev/mm", "1111", 4);
-	read_from_device("/dev/mm", last_result, 4);
-	printf("%c%c%c%c", last_result[0], last_result[1], last_result[2], last_result[3]);
-	CHECK_IS_STRING_EQUAL(last_result, "????", 4);
 	read_from_device("/sys/devices/platform/mastermind/stats", stats, PAGE_SIZE);
 	print_stats(stats);
 #endif

@@ -115,7 +115,7 @@ static struct mm_game *mm_find_game(kuid_t uid){
 	{
 		pr_err("Could not allocate memory\n");
 		spin_unlock(&device_data_lock);
-		return -ENOMEM;
+		return (void *) -ENOMEM;
 	}
 	list_add_tail(&new->list, game_list.next);
 	spin_unlock(&device_data_lock);
@@ -218,9 +218,9 @@ static ssize_t mm_read(struct file *filp, char __user *ubuf, size_t count,
 {
 	int copy_result;
 	struct mm_game *game;
-	game = mm_find_game(current_cred()->uid);
 	size_t bytes_to_copy;
 	bytes_to_copy = 4 - *ppos;
+	game = mm_find_game(current_cred()->uid);
 	if (bytes_to_copy > count && count > 0)
 	{
 		bytes_to_copy = count;
@@ -354,6 +354,7 @@ mm_write(struct file *filp, const char __user *ubuf,
 	int correct_value_guesses; 
 	char temp_array[NUM_PEGS];
 	int user_guess[NUM_PEGS];
+	int user_data_size;
 	size_t i;
 	correct_place_guesses = 0;
 	correct_value_guesses = 0;
@@ -371,7 +372,7 @@ mm_write(struct file *filp, const char __user *ubuf,
 		}
 		else
 		{
-			copy_from_user(temp_array, ubuf, NUM_PEGS);
+			user_data_size = copy_from_user(temp_array, ubuf, NUM_PEGS);
 			spin_lock(&device_data_lock);
 			for (i = 0; i < NUM_PEGS; i++)
 			{
@@ -581,7 +582,6 @@ static irqreturn_t cs421net_top(int irq, void *cookie)
  */
 static irqreturn_t cs421net_bottom(int irq, void *cookie)
 {
-	printk("Inside the bottom function.");
 	bool valid_data;
 	size_t i;
 	struct list_head *pos;
@@ -592,7 +592,7 @@ static irqreturn_t cs421net_bottom(int irq, void *cookie)
 	valid_data = true;
 	temp = NULL;
 	data = cs421net_get_data(&returned_data_size);
-	valid_data = returned_data_size == 4;
+	valid_data = (returned_data_size == 4);
 	for ( i = 0; i < 4 && valid_data; i++)
 	{
 		if(data[i] < 48 || data[i] > 57){
