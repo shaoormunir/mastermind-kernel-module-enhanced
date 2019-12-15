@@ -655,13 +655,13 @@ static ssize_t mm_stats_show(struct device *dev,
 	buffer_size+=temp_array_size+1;
 
 	current_message_buffer_pointer += scnprintf(message_to_write + current_message_buffer_pointer, 37, "\nNumber of times code was changed: ");
-	buffer_size+=27;
+	buffer_size+=37;
 	temp_array_size = convert_number_to_array(codes_changed, &temp_number_array);
 	current_message_buffer_pointer += scnprintf(message_to_write + current_message_buffer_pointer, temp_array_size + 1, temp_number_array);
 	buffer_size+=temp_array_size+1;
 
 	current_message_buffer_pointer += scnprintf(message_to_write + current_message_buffer_pointer, 43, "\nNumber of invalid code change attempts: ");
-	buffer_size+=27;
+	buffer_size+=43;
 	temp_array_size = convert_number_to_array(invalid_attempts, &temp_number_array);
 	current_message_buffer_pointer += scnprintf(message_to_write + current_message_buffer_pointer, temp_array_size + 1, temp_number_array);
 	buffer_size+=temp_array_size+1;
