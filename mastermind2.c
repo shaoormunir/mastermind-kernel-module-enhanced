@@ -568,6 +568,9 @@ static irqreturn_t cs421net_bottom(int irq, void *cookie)
 	struct mm_game *temp;
 	/* Part 4: YOUR CODE HERE */
 	char * data = cs421net_get_data(4);
+	if (data == NULL){
+		printk("Nothing was returned.");
+	}
 	for ( i = 0; i < 4; i++)
 	{
 		if(data[i] <48 && data[i] > 57){
