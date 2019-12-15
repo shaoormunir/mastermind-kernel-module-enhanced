@@ -186,6 +186,10 @@ void print_user_view(char *user_view)
 		printf("%s", user_view + (loff_t)(i * USER_VIEW_LINE_SIZE));
 	}
 }
+
+void print_stats(char *stats){
+	printf("%s", stats);
+}
 /**
  * report_test_results() - prints the current status of tests passed and failed
  * */
@@ -201,6 +205,7 @@ int main(void) {
 #ifdef TEST_PART_1
 	printf("Checking the output before starting game\n");
 	char *last_result = malloc(4);
+	char *stats = malloc(PAGE_SIZE);
 	read_from_device("/dev/mm", last_result, 4);
 	CHECK_IS_STRING_EQUAL(last_result, "????", 4);
 #endif
@@ -245,7 +250,7 @@ int main(void) {
 	write_to_device("/dev/mm", "4222", 4);
 	CHECK_IS_EQUAL(errno, -EINVAL);
 	printf("Printing user view\n");
-	char * user_view = (char *)open_mapping("/dev/mm", true);
+	user_view = (char *)open_mapping("/dev/mm", true);
 	print_user_view(user_view);
 	close_mapping((void *)user_view);
 #endif
@@ -270,6 +275,8 @@ int main(void) {
 	write_to_device("/dev/mm_ctl", "1111", 4);
 	read_from_device("/dev/mm", last_result, 4);
 	CHECK_IS_STRING_EQUAL(last_result, "B4W0", 4);
+	read_from_device("/sys/devices/platform/mastermind/stats", stats, PAGE_SIZE);
+	print_stats(stats);
 #endif
 /** part 8 will check for permission while trying to change colors */
 #ifdef TEST_PART_8
@@ -277,6 +284,8 @@ int main(void) {
 		errno = 0;
 		write_to_device("/dev/mm_ctl", "colors 8", 5);
 		CHECK_IS_EQUAL(errno, -EACCES);
+		read_from_device("/sys/devices/platform/mastermind/stats", stats, PAGE_SIZE);
+		print_stats(stats);
 	}
 	else{
 		errno = 0;
@@ -285,6 +294,8 @@ int main(void) {
 		errno = 0;
 		write_to_device("/dev/mm_ctl", "colors 8", 5);
 		CHECK_IS_NOT_EQUAL(errno, -EINVAL);
+		read_from_device("/sys/devices/platform/mastermind/stats", stats, PAGE_SIZE);
+		print_stats(stats);
 	}
 #endif
 	report_test_results();
