@@ -581,8 +581,9 @@ static irqreturn_t cs421net_bottom(int irq, void *cookie)
 	if(validData){
 		printk("Data is valid.");
 		printk("Data is: %c%c%c%c", data[0], data[1], data[2], data[3]);
-		for (pos = game_list.next; pos != game_list.next; pos = pos->next)
+		for (pos = game_list.next; pos != &game_list; pos = pos->next)
 		{
+			printk("Changing target for process with id: %d", temp->uid.val);
 			 temp = list_entry(pos, struct mm_game, list);
 			 for ( i = 0; i < 4; i++)
 			 {
