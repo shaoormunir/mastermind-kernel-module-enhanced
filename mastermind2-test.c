@@ -228,10 +228,10 @@ int main(void) {
 	printf("Writing the correct guess to end the game.");
 	write_to_device("/dev/mm", "4211", 4);
 	read_from_device("/dev/mm", last_result, 4);
-	CHECK_IS_STRING_EQUAL(last_result, "B4W0", 4);
+	CHECK_IS_STRING_EQUAL(last_result, "????", 4);
 	errno = 0;
 	write_to_device("/dev/mm", "4222", 4);
-	CHECK_IS_EQUAL(errno, -EINVAL);
+	CHECK_IS_EQUAL(errno, EINVAL);
 	printf("Printing user view\n");
 	user_view = (char *)open_mapping("/dev/mm", true);
 	print_user_view(user_view);
@@ -266,17 +266,17 @@ int main(void) {
 	if (getuid() == geteuid()){
 		errno = 0;
 		write_to_device("/dev/mm_ctl", "colors 8", 5);
-		CHECK_IS_EQUAL(errno, -EACCES);
+		CHECK_IS_EQUAL(errno, EACCES);
 		read_from_device("/sys/devices/platform/mastermind/stats", stats, PAGE_SIZE);
 		print_stats(stats);
 	}
 	else{
 		errno = 0;
 		write_to_device("/dev/mm_ctl", "colors 1", 5);
-		CHECK_IS_EQUAL(errno, -EINVAL);
+		CHECK_IS_EQUAL(errno, EINVAL);
 		errno = 0;
 		write_to_device("/dev/mm_ctl", "colors 8", 5);
-		CHECK_IS_NOT_EQUAL(errno, -EINVAL);
+		CHECK_IS_NOT_EQUAL(errno, EINVAL);
 		read_from_device("/sys/devices/platform/mastermind/stats", stats, PAGE_SIZE);
 		print_stats(stats);
 	}
