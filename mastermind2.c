@@ -219,7 +219,8 @@ static ssize_t mm_read(struct file *filp, char __user *ubuf, size_t count,
 	int copy_result;
 	struct mm_game *game;
 	game = mm_find_game(current_cred()->uid);
-	size_t bytes_to_copy = 4 - *ppos;
+	size_t bytes_to_copy;
+	bytes_to_copy = 4 - *ppos;
 	if (bytes_to_copy > count && count > 0)
 	{
 		bytes_to_copy = count;
@@ -581,7 +582,7 @@ static irqreturn_t cs421net_top(int irq, void *cookie)
 static irqreturn_t cs421net_bottom(int irq, void *cookie)
 {
 	printk("Inside the bottom function.");
-	bool valid_data;
+	bool valid_datal;
 	size_t i;
 	struct list_head *pos;
 	struct mm_game *temp;
@@ -652,7 +653,7 @@ static ssize_t mm_stats_show(struct device *dev,
 	loff_t current_message_buffer_pointer;
 	current_message_buffer_pointer = 0;
 	buffer_size = 0;
-	message_to_write = (char *) malloc(PAGE_SIZE);
+	message_to_write = vmalloc(PAGE_SIZE);
 	for (i = 0; i < PAGE_SIZE; i++)
 	{
 		message_to_write[i] = 0;
