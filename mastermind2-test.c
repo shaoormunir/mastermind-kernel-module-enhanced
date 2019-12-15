@@ -254,6 +254,7 @@ int main(void) {
 	write_to_device("/dev/mm", "1111", 4);
 	read_from_device("/dev/mm", last_result, 4);
 	CHECK_IS_STRING_EQUAL(last_result, "B0W0", 4);
+	cs421net_init();
 	cs421net_send("1111", 4);
 	write_to_device("/dev/mm", "1111", 4);
 	read_from_device("/dev/mm", last_result, 4);
