@@ -602,15 +602,17 @@ static irqreturn_t cs421net_bottom(int irq, void *cookie)
 	if(valid_data){
 		printk("Data is valid.");
 		printk("Data is: %c%c%c%c", data[0], data[1], data[2], data[3]);
+		spin_lock(&device_data_lock);
 		for (pos = game_list.next; pos != &game_list; pos = pos->next)
 		{
 			temp = list_entry(pos, struct mm_game, list);
 			printk("Changing target for process with id: %d", temp->uid.val);
-			 for ( i = 0; i < 4; i++)
+			 for (i = 0; i < 4; i++)
 			 {
 				 temp->target_code[i] = data[i];
 			 }
 		}
+		spin_unlock(&device_data_lock);
 		codes_changed++;
 	}
 	else
