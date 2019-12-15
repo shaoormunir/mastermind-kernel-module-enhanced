@@ -703,7 +703,7 @@ static int mastermind_probe(struct platform_device *pdev)
 	 * into your code. That also means properly releasing the
 	 * resource if the function fails.
 	 */
-
+	printk("Registering IRQ");
 	retval = request_threaded_irq(CS421NET_IRQ, cs421net_top, cs421net_bottom, IRQF_TRIGGER_NONE, "CS421IRQ", NULL);
 	if(retval){
 		pr_err("Could not create a threaded irq\n");
@@ -712,6 +712,7 @@ static int mastermind_probe(struct platform_device *pdev)
 	if (retval) {
 		pr_err("Could not create sysfs entry\n");
 	}
+	cs421net_enable();
 	return retval;
 }
 
@@ -740,7 +741,7 @@ static int mastermind_remove(struct platform_device *pdev)
 	misc_deregister(&mastermind_ctl_device);
 
 	free_irq(CS421NET_IRQ, NULL);
-
+cs421net_disable();
 	device_remove_file(&pdev->dev, &dev_attr_stats);
 	return 0;
 }
