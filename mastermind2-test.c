@@ -12,8 +12,6 @@
 #include <sys/user.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include <semaphore.h>
 
 #define TEST_PART_1
 
@@ -33,13 +31,6 @@
 
 static unsigned test_passed;
 static unsigned test_failed;
-static bool caught_fault;
-static bool expecting_fault;
-
-struct thread_arg {
-	pthread_t pth;
-	char names[1];
-};
 
 static size_t USER_VIEW_LINE_SIZE = 22;
 

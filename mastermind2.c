@@ -100,14 +100,14 @@ static void initialize_game(struct mm_game * game)
 
 static struct mm_game *mm_find_game(kuid_t uid){
 	struct list_head *ptr;
-	struct mm_game * game;
+	struct mm_game * game, * new ;
 	for (ptr = game_list.next; ptr!=&game_list; ptr = ptr->next){
 		game = list_entry (ptr, struct mm_game, list);
 		if (uid_eq(game->uid, uid)){
 			return game;
 		} 
 	}
-	struct mm_game * new = (struct mm_game *) kzalloc(sizeof(struct mm_game), GFP_KERNEL);
+	new = (struct mm_game *) kzalloc(sizeof(struct mm_game), GFP_KERNEL);
 	new->uid = uid;
 	spin_lock(&device_data_lock);
 	new->user_view = vmalloc(PAGE_SIZE);
@@ -216,7 +216,9 @@ static bool compare_strings(const char *source_string, size_t source_size, const
 static ssize_t mm_read(struct file *filp, char __user *ubuf, size_t count,
 					   loff_t *ppos)
 {
-	struct mm_game * game = mm_find_game(current_cred()->uid);
+	int copy_result;
+	struct mm_game *game;
+	game = mm_find_game(current_cred()->uid);
 	size_t bytes_to_copy = 4 - *ppos;
 	if (bytes_to_copy > count && count > 0)
 	{
@@ -229,7 +231,7 @@ static ssize_t mm_read(struct file *filp, char __user *ubuf, size_t count,
 	else
 	{
 		spin_lock(&device_data_lock);
-		int copy_result = 0;
+		copy_result = 0;
 		if (game->game_active)
 		{
 			copy_result = copy_to_user(ubuf + *ppos, game->last_result, bytes_to_copy);
@@ -347,11 +349,19 @@ mm_write(struct file *filp, const char __user *ubuf,
 		 size_t count, loff_t *ppos)
 {
 	struct mm_game * game = mm_find_game(current_cred()->uid);
-	int correct_place_guesses = 0;
-	int correct_value_guesses = 0;
-	char temp_array[NUM_PEGS] = {};
-	int user_guess[NUM_PEGS] = {};
+	int correct_place_guesses; 
+	int correct_value_guesses; 
+	char temp_array[NUM_PEGS];
+	int user_guess[NUM_PEGS];
 	size_t i;
+	correct_place_guesses = 0;
+	correct_value_guesses = 0;
+	for ( i = 0; i < NUM_PEGS; i++)
+	{
+		temp_array[i] = 0;
+		user_guess[i] = 0;
+	}
+	
 	if (game->game_active)
 	{
 		if (count < NUM_PEGS)
@@ -442,14 +452,23 @@ static ssize_t mm_ctl_write(struct file *filp, const char __user *ubuf,
 							size_t count, loff_t *ppos)
 {
 	struct mm_game * game = mm_find_game(current_cred()->uid);
-	char temp_array[8] = {};
-	size_t temp_length = 8;
+	char temp_array[8];
+	size_t temp_length;
+	size_t i;
+	int length_copied;
+
+	for (i = 0; i < 8; i++)
+	{
+		temp_array[i] = 0;
+	}
+	
+	temp_length = 8;
 	if (count < 8)
 	{
 		temp_length = count;
 	}
 
-	copy_from_user(temp_array, ubuf, temp_length);
+	length_copied = copy_from_user(temp_array, ubuf, temp_length);
 	spin_lock(&device_data_lock);
 
 	if (compare_strings(temp_array, temp_length, "start", 5))
@@ -562,13 +581,16 @@ static irqreturn_t cs421net_top(int irq, void *cookie)
 static irqreturn_t cs421net_bottom(int irq, void *cookie)
 {
 	printk("Inside the bottom function.");
-	bool valid_data = true;
+	bool valid_data;
 	size_t i;
-	struct list_head *pos, *n;
+	struct list_head *pos;
 	struct mm_game *temp;
 	size_t returned_data_size;
+	char * data;
 	/* Part 4: YOUR CODE HERE */
-	char * data = cs421net_get_data(&returned_data_size);
+	valid_data = true;
+	temp = NULL;
+	data = cs421net_get_data(&returned_data_size);
 	valid_data = returned_data_size == 4;
 	for ( i = 0; i < 4 && valid_data; i++)
 	{
@@ -622,7 +644,7 @@ static ssize_t mm_stats_show(struct device *dev,
 			     struct device_attribute *attr, char *buf)
 {
 	/* Part 3: YOUR CODE HERE */
-	char message_to_write[PAGE_SIZE];
+	char * message_to_write;
 	char *temp_number_array;
 	size_t temp_array_size;
 	size_t i;
@@ -630,6 +652,7 @@ static ssize_t mm_stats_show(struct device *dev,
 	loff_t current_message_buffer_pointer;
 	current_message_buffer_pointer = 0;
 	buffer_size = 0;
+	message_to_write = (char *) malloc(PAGE_SIZE);
 	for (i = 0; i < PAGE_SIZE; i++)
 	{
 		message_to_write[i] = 0;
