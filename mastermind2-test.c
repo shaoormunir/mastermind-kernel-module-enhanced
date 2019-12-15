@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -112,14 +113,6 @@ static size_t USER_VIEW_LINE_SIZE = 22;
 			printf("%d: PASS\n", __LINE__);     \
 		}                                       \
 	} while (0);
-
-static void fault_handler(int signum, siginfo_t *siginfo __attribute__((unused)), void *context __attribute__((unused))) {
-	printf("Caught signal %d: %s!\n", signum, strsignal(signum));
-	if (!expecting_fault) {
-		exit(EXIT_FAILURE);
-	}
-	caught_fault = true;
-}
 /**
  * open_mapping() - opens a mapping to the given device name in either read or write mode, depending
  * on the value of the read boolean
